@@ -8,7 +8,8 @@ console.log("AUTH ROUTES LOADED");
 const {
     register,
     login,
-    logout
+    logout,
+    refresh
 } = require("../controllers/authController");
 
 const validateRequest = require("../middleware/validateRequest");
@@ -75,5 +76,6 @@ router.post(
 
 
 router.post("/logout", logout);
+router.post("/refresh" , refresh);
 
 module.exports = router;
