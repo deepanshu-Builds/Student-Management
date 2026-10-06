@@ -4,6 +4,7 @@ const User = require("../models/User");
 const RefreshToken = require("../models/RefreshToken");
 const generateTokens = require("../utils/generateTokens");
 const hashToken = require("../utils/hashTokens");
+const hashToken = require("../utils/hashTokens");
 const register = async (req, res, next) => {
     try {
         const {
@@ -138,8 +139,70 @@ const logout = async (req, res, next) => {
         next(error);
     }
 };
+const refresh = async(req , res , next)=>{
+    try {
+        const refreshToken = req.cookies.refreshToken;
+        if(!refreshToken){
+            return res.status(401).json({
+                success : false,
+                message : "Refresh Token required"
+            });
+        }
+        const hashToken = hashToken(refreshToken);
+        const storedToken = await RefreshToken.findOne({
+            tokenHash
+        });
+        if(!storedToken){
+            return res.status(401).json({
+                success : false,
+                message : "Invalid refresh token"
+            });
+        }
+        if(storedToken.expiresAt < new Date()){
+            await RefreshToken.deleteOne({
+                _id : storedToken._id
+            });
+            return res.status(401).json({
+                success : false,
+                message : "Refresh Token Expired"
+            });
+        }
+        const user = await User.findById(storedToken.user);
+        if(!user || !user.isActive){
+            return res.status(401).json({
+                success : false,
+                message : "User is not available"
+            });
+        }
+        await RefreshToken.deleteOne({
+            _id:storedToken._id
+        });
+        const {
+            accessToken,
+            refreshToken : newRefreshToken
+        } = await generateTokens(user);
+        res.cookie("refreshToken" , newRefreshToken , {
+            httpOnly : true,
+            secure:process.env.NODE_ENV==="production",
+            samesite:"lax",
+            maxAge: 7*24*60*60*1000,
+            path:"api/auth"
+        });
+        res.status(2000).json({
+            success:true,
+            message : "Token refreshed Successfully",
+            accessToken
+        });
+
+    } catch (error) {
+        next(error);
+        
+    }
+
+}
 module.exports = {
     register,
     login,
-    logout
+    logout,
+    refresh
 };
