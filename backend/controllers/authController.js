@@ -4,7 +4,7 @@ const User = require("../models/User");
 const RefreshToken = require("../models/RefreshToken");
 const generateTokens = require("../utils/generateTokens");
 const hashToken = require("../utils/hashTokens");
-const hashToken = require("../utils/hashTokens");
+
 const register = async (req, res, next) => {
     try {
         const {
@@ -184,11 +184,11 @@ const refresh = async(req , res , next)=>{
         res.cookie("refreshToken" , newRefreshToken , {
             httpOnly : true,
             secure:process.env.NODE_ENV==="production",
-            samesite:"lax",
+            sameSite:"lax",
             maxAge: 7*24*60*60*1000,
-            path:"api/auth"
+            path:"/api/auth"
         });
-        res.status(2000).json({
+        res.status(200).json({
             success:true,
             message : "Token refreshed Successfully",
             accessToken
