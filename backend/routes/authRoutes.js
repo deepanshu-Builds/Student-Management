@@ -2,6 +2,7 @@
 const express = require("express");
 const { body } = require("express-validator");
 const authenticate = require("../middleware/authMiddleware");
+const authorizeRoles = require("../middleware/roleMiddleware");
 
 console.log("AUTH ROUTES LOADED");
 
@@ -77,5 +78,18 @@ router.post(
 
 router.post("/logout", logout);
 router.post("/refresh" , refresh);
+router.get(
+    "/admin-test",
+    authenticate,
+    authorizeRoles("admin"),
+    (req , res)=>{
+        res.status(200).json({
+            success: true,
+            message : "Welcome admin",
+            user:req.user
+        });
+    }
+
+)
 
 module.exports = router;
