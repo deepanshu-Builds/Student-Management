@@ -148,7 +148,7 @@ const refresh = async(req , res , next)=>{
                 message : "Refresh Token required"
             });
         }
-        const hashToken = hashToken(refreshToken);
+        const tokenHash = hashToken(refreshToken);
         const storedToken = await RefreshToken.findOne({
             tokenHash
         });
