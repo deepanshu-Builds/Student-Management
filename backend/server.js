@@ -30,7 +30,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
-app.use("/api/student" , studentRoutes);
+app.use("/api/students" , studentRoutes);
 
 const PORT = process.env.PORT || 5000;
 
