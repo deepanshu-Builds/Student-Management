@@ -32,7 +32,22 @@ const { name, rollNumber, department, year } = req.body;
 
 
 };
+const getAllStudents = async(req , res , next)=>{
+    try {
+        const students = await Student.find({
+            createdBy:req.user.userId
+        });
+        return res.status(200).json({
+            success : true,
+            count : students.length,
+            students
+        });
+    } catch (error) {
+        next(error);
+    }
+}
 
 module.exports = {
-createStudent
+createStudent,
+getAllStudents
 };
