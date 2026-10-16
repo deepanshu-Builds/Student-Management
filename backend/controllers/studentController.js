@@ -133,22 +133,52 @@ try {
         student
     });
 
-
-
-
-
-
 } catch (error) {
     next(error);
     
 }
-
-
 }
+
+const deleteStudent = async (req, res, next) => {
+  try {
+    const { rollNumber } = req.params;
+
+    const student = await Student.findOneAndUpdate(
+      {
+        rollNumber: rollNumber.trim(),
+        createdBy: req.user.userId,
+        isActive: true
+      },
+      {
+        $set: { isActive: false }
+      },
+      {
+        new: true
+      }
+    );
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Active student not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Student deactivated successfully",
+      student
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 
 module.exports = {
 createStudent,
 getAllStudents,
 getStudentByRollNumber,
-updateStudent
+updateStudent,
+deleteStudent
 };
