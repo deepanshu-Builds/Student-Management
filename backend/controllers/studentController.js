@@ -74,8 +74,72 @@ const updateStudent = async(req, res, next)=>{
 try {
         const{rollNumber} = req.params;
     const{name , department , year}= req.body;
-    
+    const updates = {};
+    if(name !== undefined){
+        if(typeof name !=="string" || name.trim()<2 || name.trim()>100){
+            res.status(400).json({
+                success : false,
+                message : "Name must be between 2 and 100 charecters"
+            });
+        }
+        updates.name = name.trim();
+    }
+    if(department !== undefined){
+        if(typeof department !== "string"){
+            res.status(400).json({
+                success:false,
+                message:"Department Cannot be empty"
+            });
+
+        }
+        updates.department = department.trim();
+    }
+    if(year!==undefined){
+        if(!Number.isInteger(year)|| year<1 || year>4){
+            res.status(400).json({
+                success : false,
+                message : "Year must 1 , 2 , or 3"
+            });
+        }
+    }
+    if(Object.keys(updates).length===0){
+        return res.status(400).json({
+            success : false,
+            message : "Provide at least one valid field to update"
+        });
+    }
+      const student = await Student.findOneAndUpdate(
+        {
+            rollNumber: rollNumber.trim(),
+            createdBy: req.user.userId
+        },
+        {
+            $set: updates
+        },
+        {
+            new: true,
+            runValidators: true
+        }
+    );
+     if (!student) {
+        return res.status(404).json({
+            success: false,
+            message: "Student not found"
+        });
+    }
+    return res.status(200).json({
+        success: true,
+        message: "Student updated successfully",
+        student
+    });
+
+
+
+
+
+
 } catch (error) {
+    next(error);
     
 }
 
