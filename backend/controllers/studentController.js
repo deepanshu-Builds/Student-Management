@@ -70,6 +70,17 @@ const getStudentByRollNumber = async (req, res, next) => {
         next(error);
     }
 };
+const updateStudent = async(req, res, next)=>{
+try {
+        const{rollNumber} = req.params;
+    const{name , department , year}= req.body;
+    
+} catch (error) {
+    
+}
+
+
+}
 
 module.exports = {
 createStudent,
