@@ -117,8 +117,8 @@ try {
             $set: updates
         },
         {
-            new: true,
-            runValidators: true
+             returnDocument: "after",
+  runValidators: true
         }
     );
      if (!student) {
