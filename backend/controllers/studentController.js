@@ -149,5 +149,6 @@ try {
 module.exports = {
 createStudent,
 getAllStudents,
-getStudentByRollNumber
+getStudentByRollNumber,
+updateStudent
 };
