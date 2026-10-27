@@ -5,10 +5,29 @@ const authorizeRoles = require("../middleware/roleMiddleware");
 
 const router = express.Router();
 
-router.post("/", authenticate, createStudent);
-router.get("/" , authenticate , getAllStudents);
-router.get("/roll/:rollNumber" , authenticate , getStudentByRollNumber)
-router.patch("/roll/:rollNumber" , authenticate , updateStudent);
-router.delete("/roll/:rollNumber" , authenticate , deleteStudent)
+router.post(
+    "/",
+     authenticate,
+     authorizeRoles("teacher","admin"),
+      createStudent
+    );
+router.get("/" ,
+     authenticate , 
+     authorizeRoles("teacher","admin"),
+     getAllStudents);
+     //Get all the students
+router.get("/roll/:rollNumber" ,
+     authenticate ,
+     authorizeRoles("teacher","admin"),
+      getStudentByRollNumber);
+
+router.patch("/roll/:rollNumber" ,
+     authenticate ,
+     authorizeRoles("teacher","admin"),
+     updateStudent);
+router.delete("/roll/:rollNumber" ,
+     authenticate ,
+     authorizeRoles("admin"),
+      deleteStudent);
 
 module.exports = router;
