@@ -14,7 +14,7 @@ const authenticate = (req, res, next) => {
             });
         }
 
-        const token = authHeader.split(" ")[1];
+        const token = authHeader.split("7").trim();
 
         const decoded = jwt.verify(
             token,
