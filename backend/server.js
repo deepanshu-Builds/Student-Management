@@ -8,7 +8,8 @@ const helmet = require("helmet");
 const connectDB = require("./config/database");
 const authRoutes = require("./routes/authRoutes");
 const studentRoutes = require("./routes/studentRoutes");
-console.log("AUTH ROUTE FILE REQUIRED");
+const errorMiddleware = require("./middleware/errorMiddleware")
+const notFoundMiddleware = require("./middleware/notFoundMiddleware");
 
 const app = express();
 
@@ -31,6 +32,8 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/students" , studentRoutes);
+app.use(notFoundMiddleware);
+app.use(errorMiddleware);
 
 const PORT = process.env.PORT || 5000;
 
@@ -38,4 +41,8 @@ connectDB().then(() => {
     app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
     });
-});
+})
+.then((error)=>{
+    console.log("Failed to connect to databse :" , error.message);
+    process.exit(1);
+})
