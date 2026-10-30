@@ -139,67 +139,127 @@ const logout = async (req, res, next) => {
         next(error);
     }
 };
-const refresh = async(req , res , next)=>{
+
+
+const refresh = async (req, res, next) => {
+    let newRefreshToken;
+
     try {
+        // 1. Read the refresh token from the HTTP-only cookie
         const refreshToken = req.cookies.refreshToken;
-        if(!refreshToken){
+
+        if (!refreshToken) {
             return res.status(401).json({
-                success : false,
-                message : "Refresh Token required"
+                success: false,
+                message: "Refresh token required"
             });
         }
+
+        // 2. Hash the received token
         const tokenHash = hashToken(refreshToken);
+
+        // 3. Find the stored token
         const storedToken = await RefreshToken.findOne({
             tokenHash
         });
-        if(!storedToken){
+
+        if (!storedToken) {
             return res.status(401).json({
-                success : false,
-                message : "Invalid refresh token"
+                success: false,
+                message: "Invalid refresh token"
             });
         }
-        if(storedToken.expiresAt < new Date()){
+
+        // 4. Check expiry
+        if (storedToken.expiresAt <= new Date()) {
             await RefreshToken.deleteOne({
-                _id : storedToken._id
+                _id: storedToken._id
             });
+
             return res.status(401).json({
-                success : false,
-                message : "Refresh Token Expired"
+                success: false,
+                message: "Refresh token expired"
             });
         }
+
+        // 5. Check the associated user
         const user = await User.findById(storedToken.user);
-        if(!user || !user.isActive){
+
+        if (!user || !user.isActive) {
+            await RefreshToken.deleteOne({
+                _id: storedToken._id
+            });
+
             return res.status(401).json({
-                success : false,
-                message : "User is not available"
+                success: false,
+                message: "User is not available"
             });
         }
-        await RefreshToken.deleteOne({
-            _id:storedToken._id
+
+        // 6. Generate a new token pair and save the new refresh token
+        const tokens = await generateTokens(user);
+
+        const accessToken = tokens.accessToken;
+        newRefreshToken = tokens.refreshToken;
+
+        // 7. Atomically consume the old token.
+        // Only one competing request can successfully delete it.
+        const consumedToken = await RefreshToken.findOneAndDelete({
+            _id: storedToken._id,
+            tokenHash,
+            expiresAt: { $gt: new Date() }
         });
-        const {
-            accessToken,
-            refreshToken : newRefreshToken
-        } = await generateTokens(user);
-        res.cookie("refreshToken" , newRefreshToken , {
-            httpOnly : true,
-            secure:process.env.NODE_ENV==="production",
-            sameSite:"lax",
-            maxAge: 7*24*60*60*1000,
-            path:"/api/auth"
+
+        if (!consumedToken) {
+            // Another request may already have consumed the old token.
+            // Remove the new token created by this losing request.
+            await RefreshToken.deleteOne({
+                tokenHash: hashToken(newRefreshToken)
+            });
+
+            return res.status(401).json({
+                success: false,
+                message: "Refresh token has already been used or expired"
+            });
+        }
+
+        // 8. Send the new refresh token as an HTTP-only cookie
+        res.cookie("refreshToken", newRefreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            path: "/api/auth"
         });
-        res.status(200).json({
-            success:true,
-            message : "Token refreshed Successfully",
+
+        // 9. Return the new access token
+        return res.status(200).json({
+            success: true,
+            message: "Token refreshed successfully",
             accessToken
         });
 
     } catch (error) {
-        next(error);
-        
-    }
+        // Clean up a newly created token if an error occurs
+        // before the response is successfully completed.
+        if (newRefreshToken) {
+            try {
+                await RefreshToken.deleteOne({
+                    tokenHash: hashToken(newRefreshToken)
+                });
+            } catch (cleanupError) {
+                console.error(
+                    "Refresh token cleanup failed:",
+                    cleanupError.message
+                );
+            }
+        }
 
-}
+        return next(error);
+    }
+};
+
+
 module.exports = {
     register,
     login,
