@@ -28,6 +28,14 @@ const markAttendance = async (req, res, next) => {
             });
         }
 
+        // Validate subject
+        if (!subject || typeof subject !== "string") {
+            return res.status(400).json({
+                success: false,
+                message: "Subject is required"
+            });
+        }
+
         const sectionSubjects = section.subjects.map(
             item => item.name.toLowerCase()
         );
@@ -39,17 +47,32 @@ const markAttendance = async (req, res, next) => {
             });
         }
 
-        const sectionStudentIds = section.students.map(
-            id => id.toString()
-        );
+        // Validate attendance records
+        if (!Array.isArray(records) || records.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Attendance records are required"
+            });
+        }
 
         const submittedStudentIds = records.map(
-            record => record.student
+            record => record.student?.toString()
+        );
+
+        // Check whether submitted students belong to this section
+        const validStudents = await Student.find({
+            _id: { $in: submittedStudentIds },
+            section: sectionId,
+            isActive: true
+        }).select("_id");
+
+        const validStudentIds = new Set(
+            validStudents.map(student => student._id.toString())
         );
 
         const invalidStudents = submittedStudentIds.filter(
             id => !mongoose.isValidObjectId(id) ||
-                !sectionStudentIds.includes(id)
+                !validStudentIds.has(id)
         );
 
         if (invalidStudents.length > 0) {
@@ -59,6 +82,19 @@ const markAttendance = async (req, res, next) => {
             });
         }
 
+        // Validate attendance status
+        const invalidRecords = records.some(
+            record => !["Present", "Absent"].includes(record.status)
+        );
+
+        if (invalidRecords) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid attendance status"
+            });
+        }
+
+        // Validate date
         const normalizedDate = new Date(date);
 
         if (Number.isNaN(normalizedDate.getTime())) {
@@ -70,6 +106,7 @@ const markAttendance = async (req, res, next) => {
 
         normalizedDate.setUTCHours(0, 0, 0, 0);
 
+        // Create or update attendance
         const attendance = await Attendance.findOneAndUpdate(
             {
                 section: sectionId,
@@ -95,10 +132,12 @@ const markAttendance = async (req, res, next) => {
             message: "Attendance saved successfully",
             attendance
         });
+
     } catch (error) {
         next(error);
     }
 };
+
 
 // Get attendance by section, subject and date
 const getAttendance = async (req, res, next) => {
@@ -109,6 +148,13 @@ const getAttendance = async (req, res, next) => {
             return res.status(400).json({
                 success: false,
                 message: "Invalid section ID"
+            });
+        }
+
+        if (!subject || !date) {
+            return res.status(400).json({
+                success: false,
+                message: "Subject and date are required"
             });
         }
 
@@ -140,10 +186,12 @@ const getAttendance = async (req, res, next) => {
             success: true,
             attendance
         });
+
     } catch (error) {
         next(error);
     }
 };
+
 
 // Get all attendance records of a section
 const getSectionAttendance = async (req, res, next) => {
@@ -169,10 +217,12 @@ const getSectionAttendance = async (req, res, next) => {
             count: attendance.length,
             attendance
         });
+
     } catch (error) {
         next(error);
     }
 };
+
 
 module.exports = {
     markAttendance,
