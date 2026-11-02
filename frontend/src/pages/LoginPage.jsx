@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { apiRequest } from "../services/api";
-import "../styles/LoginPage.css";
+import "../styles/Loginpage.css";
 
 function LoginPage({ onNavigate, onLogin }) {
   const [loading, setLoading] = useState(false);
