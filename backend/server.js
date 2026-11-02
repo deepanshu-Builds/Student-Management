@@ -10,6 +10,8 @@ const authRoutes = require("./routes/authRoutes");
 const studentRoutes = require("./routes/studentRoutes");
 const errorMiddleware = require("./middleware/errorMiddleware")
 const notFoundMiddleware = require("./middleware/notFoundMiddleware");
+const sectionRoutes = require("./routes/sectionRoutes");
+const attendanceRoutes = require("./routes/attendanceRoutes");
 
 const app = express();
 
@@ -32,6 +34,8 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/students" , studentRoutes);
+app.use("/api/sections", sectionRoutes);
+app.use("/api/attendance", attendanceRoutes);
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);
 
@@ -42,7 +46,7 @@ connectDB().then(() => {
         console.log(`Server running on port ${PORT}`);
     });
 })
-.then((error)=>{
-    console.log("Failed to connect to databse :" , error.message);
+.catch((error)=>{
+    console.log("Failed to connect to database :" , error.message);
     process.exit(1);
 })
