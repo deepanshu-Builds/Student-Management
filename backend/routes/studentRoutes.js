@@ -31,12 +31,12 @@ router.get("/roll/:rollNumber" ,
 router.patch("/roll/:rollNumber" ,
      authenticate ,
      authorizeRoles("teacher","admin"),
-     createStudentValidation,
+     updateStudentValidation,
      validateRequest,
      updateStudent);
 router.delete("/roll/:rollNumber" ,
      authenticate ,
-     authorizeRoles("admin"),
+     authorizeRoles("teacher","admin"),
       deleteStudent);
 
 module.exports = router;
