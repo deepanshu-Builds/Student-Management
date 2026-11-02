@@ -1,0 +1,516 @@
+
+.attendance-page {
+  width: 100%;
+}
+
+.attendance-header {
+    margin-top: -8px;
+  margin-bottom: 25px;
+}
+
+
+
+.attendance-header h1 {
+  margin-top: 9px;
+  color: #171e26;
+  font-size: 29px;
+   font-family: "Libre Baskerville" , sans-serif;
+}
+.attendance-header h2{
+    color: #1d127e;
+     font-family: "Libre Baskerville" , sans-serif;
+}
+.attendance-header p {
+  margin-top: 7px;
+  color: #727b83;
+  font-size: 13px;
+}
+.attendance-header span{
+    color: #0ea12e;
+}
+.attendance-section{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+
+
+.attendance-filter-card,
+.attendance-roster-section,
+.attendance-history-section {
+  margin-bottom: 25px;
+  padding: 22px;
+  background: #ffffff;
+  border: 1px solid #e5e2da;
+  border-radius: 7px;
+  box-shadow: 0 3px 10px rgba(32, 39, 46, 0.035);
+}
+
+.attendance-filter-heading h2,
+.attendance-roster-header h2 {
+  color: #1d127e;
+  font-size: 15px;
+  font-family: "Libre Baskerville" , sans-serif;
+}
+
+
+
+.attendance-filter-heading p,
+.attendance-roster-header p {
+  margin-top: 6px;
+  color: #727b83;
+  font-size: 12px;
+}
+
+.attendance-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.attendance-roster-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+.attendance-roster-header p{
+  color: green;
+   font-family: "Libre Baskerville" , sans-serif;
+
+}
+.attendance-roster-header h2{
+  font-size: 20px;
+  
+}
+
+.attendance-count {
+  padding: 7px 11px;
+  color: #020202;
+   
+  background: #f1eee5;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.attendance-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.attendance-summary > div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 15px;
+  background: #f8f7f3;
+  border: 1px solid #e9e6de;
+  border-radius: 6px;
+}
+
+.attendance-summary span {
+  color: #000000;
+  font-weight: bold;
+  font-size: 12px;
+  font-family: "Libre Baskerville" , sans-serif;
+  
+}
+
+.attendance-summary strong {
+  color: #020202;
+  font-size: 23px;
+}
+
+.attendance-bulk-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.attendance-bulk-actions > span {
+  margin-right: auto;
+  color: #52616e;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.attendance-bulk-actions button {
+  font-family: "Libre Baskerville" , sans-serif;
+  padding: 8px 11px;
+  color: white;
+  background-color: #1d127e;
+ 
+  border: 1px solid #dcdedc;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 600;
+ 
+}
+
+
+
+.attendance-status-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.attendance-status-btn {
+  min-width: 76px;
+  padding: 7px 10px;
+  background: #ffffff;
+  border: 1px solid #deded9;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.present-btn {
+  color: #24734a;
+  box-shadow:  1px 1px 1px black;
+  background-color: white;
+  font-family: "Libre Baskerville" , sans-serif;
+}
+
+.present-btn:hover,
+.present-btn.selected {
+  color: #ffffff;
+  background: #24734a;
+  border-color: #24734a;
+}
+
+.absent-btn {
+  color: #b91111;
+  font-family: "Libre Baskerville" , sans-serif;
+  border: none;
+  background-color: #f8f5f5;
+  box-shadow:  1px 1px 1px black;
+}
+
+.absent-btn:hover,
+.absent-btn.selected {
+  color: #f8f8f8;
+  background: #b42318;
+  border-color: #b42318;
+}
+
+.attendance-save-area {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #eeece6;
+}
+
+.attendance-save-area > span {
+  color: #727b83;
+  font-size: 12px;
+}
+
+.attendance-save-area button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.attendance-error {
+  margin-top: 15px;
+  color: #b42318;
+  font-size: 12px;
+}
+
+.attendance-success {
+  margin-top: 15px;
+  color: #24734a;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.attendance-empty-state {
+  padding: 28px 15px;
+  text-align: center;
+  background: #faf9f6;
+  border: 3px  #afaca4;
+  border-radius: 6px;
+}
+
+.attendance-empty-state h3 {
+  color: #171e26;
+  font-size: 15px;
+  font-family: "Libre Baskerville" , sans-serif;
+
+}
+
+.attendance-empty-state p {
+  margin-top: 7px;
+  color: #e70303;
+  font-size: 12px;
+}
+
+.attendance-history-list {
+  display: flex;
+  flex-direction: column;
+}
+
+/* .attendance-history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 15px 0;
+  border-bottom: 1px solid #eeece6;
+} */
+ .attendance-history-item {
+  display: grid;
+  grid-template-columns: 1fr 180px 60px;
+  align-items: center;
+  gap: 15px;
+  padding: 10px 0;
+  border-bottom: 1px solid #eeece6;
+}
+
+.attendance-history-item:last-child {
+  border-bottom: none;
+}
+
+.attendance-history-item > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.attendance-history-item strong {
+  color: #303a43;
+  font-size: 13px;
+}
+
+.attendance-history-item > div:first-child span {
+  color: #727b83;
+  font-size: 11px;
+}
+
+/* .history-counts {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+} */
+ /* history-counts {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+ 
+  font-size: 5px;
+} */
+.history-counts {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  width: 180px;
+  font-size: 11px;
+}
+.history-counts span:first-child {
+  color: #edf0ee;
+  border-radius: 3px;
+  font-weight: bold;
+  padding: 7px;
+  background-color: #165737;
+  border: 0.5px black;
+  font-family: "Libre Baskerville" , sans-serif;
+  box-shadow: 2px 2px 2px rgb(0, 0, 0);
+  
+ 
+}
+
+.history-counts span:last-child {
+color: #edf0ee;
+  border-radius: 5px;
+  font-weight: bold;
+  padding: 7px;
+  font-family: "Libre Baskerville" , sans-serif;
+  background-color: #a71818;
+  border: 0.5px black;
+  box-shadow: 2px 2px 2px rgb(0, 0, 0);
+  
+}
+
+.attendance-history-item button {
+  padding: 7px 10px;
+  color: #244d70;
+  background: #ffffff;
+  border: 1px solid #dcdedc;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.attendance-history-item button:hover {
+  background: #f1eee5;
+  border-color: #244d70;
+}
+
+.details-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.attendance-open-btn {
+  min-height: 40px;
+  padding: 10px 15px;
+  color: #244d70;
+  background: #ffffff;
+  border: 1px solid #244d70;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.attendance-open-btn:hover {
+  color: #ffffff;
+  background: #244d70;
+}
+
+@media (max-width: 700px) {
+  .details-header-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .attendance-open-btn,
+  .details-header-actions .primary-btn {
+    width: 100%;
+  }
+
+  .attendance-filter-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .attendance-filter-card,
+  .attendance-roster-section,
+  .attendance-history-section {
+    padding: 16px;
+  }
+
+  .attendance-save-area {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .attendance-save-area button {
+    width: 100%;
+  }
+
+  .attendance-history-item {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .history-counts {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 450px) {
+  .attendance-header h1 {
+    font-size: 23px;
+  }
+
+  .attendance-summary {
+    gap: 7px;
+  }
+
+  .attendance-summary > div {
+    padding: 11px;
+  }
+
+  .attendance-summary strong {
+    font-size: 20px;
+
+  }
+
+
+  .attendance-bulk-actions > span {
+    width: 100%;
+  }
+  /* .attendance-bulk-actions  {
+    font-family: "Libre Baskerville" , sans-serif;
+  
+      
+  } */
+  .attendance-status-btn {
+    min-width: 65px;
+    padding: 7px;
+  }
+
+  .attendance-table th,
+  .attendance-table td {
+    padding: 11px;
+    
+  }
+}
+.student-table-wrapper th{
+  color: #000000;
+  font-family: "Libre Baskerville" , sans-serif;
+  
+}
+.student-table-wrapper td{
+   font-family: "Libre Baskerville" , sans-serif;
+  
+  
+}
+/* Attendance Record Status */
+
+/* .record-present-status {
+  color: #166534;
+  font-weight: 700;
+}
+
+.record-absent-status {
+  color: #991b1b;
+  font-weight: 700;
+} */
+/* Present Status - Dark Green */
+.attendance-page .student-table-wrapper table.attendance-table tbody td.record-present-status {
+  color: #166534 !important;
+  font-weight: 700 !important;
+}
+
+/* Absent Status - Dark Red */
+.attendance-page .student-table-wrapper table.attendance-table tbody td.record-absent-status {
+  color: #991b1b !important;
+  font-weight: 700 !important;
+}
+/* Manage Attendance Page Layout */
+.attendance-page {
+  width: 100%;
+  min-height: 100vh;
+  padding: 38px 40px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .attendance-page {
+    padding: 25px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .attendance-page {
+    padding: 20px 16px;
+  }
+}
