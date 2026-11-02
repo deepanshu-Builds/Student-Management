@@ -1,28 +1,81 @@
 
+const mongoose = require("mongoose");
 const Student = require("../models/Student");
+const Section = require("../models/Section");
 
-const getOwnershipFilter = (user) => {
-    if (user.role === "admin") {
-        return {};
+// All authenticated teachers and admins share student access.
+const getOwnershipFilter = () => ({});
+
+// CREATE STUDENT
+const createStudent = async (req, res, next) => {
+    try {
+        const { name, rollNumber, section: sectionId } = req.body;
+
+        if (!mongoose.Types.ObjectId.isValid(sectionId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid section ID"
+            });
+        }
+
+        const section = await Section.findOne({
+            _id: sectionId,
+            isActive: true
+        });
+
+        if (!section) {
+            return res.status(404).json({
+                success: false,
+                message: "Section not found or inactive"
+            });
+        }
+
+        const existingStudent = await Student.findOne({ rollNumber });
+
+        if (existingStudent) {
+            return res.status(409).json({
+                success: false,
+                message: "Student with this roll number already exists"
+            });
+        }
+
+        const student = await Student.create({
+            name,
+            rollNumber,
+            department: section.name,
+            year: section.year,
+            section: section._id,
+            createdBy: req.user.userId
+        });
+
+        await Section.findByIdAndUpdate(section._id, {
+            $addToSet: { students: student._id }
+        });
+
+        return res.status(201).json({
+            success: true,
+            message: "Student created successfully",
+            student
+        });
+    } catch (error) {
+        next(error);
     }
-
-    return { createdBy: user.userId };
 };
 
+// GET ALL STUDENTS
 const getAllStudents = async (req, res, next) => {
     try {
-        // 1. Read query parameters
         const {
             search,
             department,
             year,
+            section,
             page = "1",
             limit = "10",
             sortBy = "createdAt",
             order = "desc"
         } = req.query;
 
-        // 2. Validate pagination
         const pageNumber = Number(page);
         const limitNumber = Number(limit);
 
@@ -39,7 +92,6 @@ const getAllStudents = async (req, res, next) => {
             });
         }
 
-        // 3. Validate sorting fields
         const allowedSortFields = [
             "name",
             "rollNumber",
@@ -62,13 +114,11 @@ const getAllStudents = async (req, res, next) => {
             });
         }
 
-        // 4. Build the database filter
         const filter = {
-            ...getOwnershipFilter(req.user),
+            ...getOwnershipFilter(),
             isActive: true
         };
 
-        // 5. Search by name or roll number
         if (search && search.trim()) {
             const searchTerm = search.trim().slice(0, 100);
             const escapedSearch = searchTerm.replace(
@@ -82,12 +132,10 @@ const getAllStudents = async (req, res, next) => {
             ];
         }
 
-        // 6. Filter by department
         if (department && department.trim()) {
             filter.department = department.trim();
         }
 
-        // 7. Filter by year
         if (year !== undefined) {
             const yearNumber = Number(year);
 
@@ -105,12 +153,22 @@ const getAllStudents = async (req, res, next) => {
             filter.year = yearNumber;
         }
 
-        // 8. Calculate pagination
+        if (section !== undefined) {
+            if (!mongoose.Types.ObjectId.isValid(section)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid section ID"
+                });
+            }
+
+            filter.section = section;
+        }
+
         const skip = (pageNumber - 1) * limitNumber;
 
-        // 9. Run query and count in parallel
         const [students, totalStudents] = await Promise.all([
             Student.find(filter)
+                .populate("section", "name year")
                 .sort({
                     [sortBy]: order === "asc" ? 1 : -1,
                     _id: 1
@@ -122,7 +180,6 @@ const getAllStudents = async (req, res, next) => {
             Student.countDocuments(filter)
         ]);
 
-        // 10. Return paginated response
         return res.status(200).json({
             success: true,
             pagination: {
@@ -134,6 +191,106 @@ const getAllStudents = async (req, res, next) => {
                 hasPreviousPage: pageNumber > 1
             },
             students
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// GET STUDENT BY ROLL NUMBER
+const getStudentByRollNumber = async (req, res, next) => {
+    try {
+        const student = await Student.findOne({
+            rollNumber: req.params.rollNumber,
+            isActive: true,
+            ...getOwnershipFilter()
+        }).populate("section", "name year");
+
+        if (!student) {
+            return res.status(404).json({
+                success: false,
+                message: "Student not found"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            student
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// UPDATE STUDENT
+const updateStudent = async (req, res, next) => {
+    try {
+        const allowedFields = ["name"];
+        const updates = {};
+
+        for (const field of allowedFields) {
+            if (req.body[field] !== undefined) {
+                updates[field] = req.body[field];
+            }
+        }
+
+        const student = await Student.findOneAndUpdate(
+            {
+                rollNumber: req.params.rollNumber,
+                isActive: true,
+                ...getOwnershipFilter()
+            },
+            { $set: updates },
+            {
+                new: true,
+                runValidators: true
+            }
+        ).populate("section", "name year");
+
+        if (!student) {
+            return res.status(404).json({
+                success: false,
+                message: "Student not found"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Student updated successfully",
+            student
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// DELETE STUDENT (SOFT DELETE)
+const deleteStudent = async (req, res, next) => {
+    try {
+        const student = await Student.findOneAndUpdate(
+            {
+                rollNumber: req.params.rollNumber,
+                isActive: true,
+                ...getOwnershipFilter()
+            },
+            { $set: { isActive: false } },
+            { new: true }
+        );
+
+        if (!student) {
+            return res.status(404).json({
+                success: false,
+                message: "Student not found"
+            });
+        }
+
+        await Section.findByIdAndUpdate(student.section, {
+            $pull: { students: student._id }
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Student deleted successfully"
         });
     } catch (error) {
         next(error);
