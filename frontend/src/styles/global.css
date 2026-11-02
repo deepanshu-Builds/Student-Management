@@ -1,0 +1,87 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  font-family: "Inter", "Segoe UI", Arial, sans-serif;
+  color: #ffffff;
+  background: #fefffe;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  background: #fcfcfc;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.app {
+  min-height: 100vh;
+  background: #eff0f7;
+}
+
+.main-content {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 38px 24px;
+}
+
+@media (max-width: 600px) {
+  .main-content {
+    padding: 25px 16px;
+  }
+}
+.app-container {
+  min-height: 100vh;
+  width: 100%;
+  background: #fcfcfc;
+}
+
+.home-page {
+  width: 100%;
+  padding: 38px 40px;
+}
+
+@media (max-width: 768px) {
+  .home-page {
+    padding: 25px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-page {
+    padding: 20px 16px;
+  }
+}
+/* Section Details page spacing */
+.section-details {
+  width: 100%;
+  min-height: 100vh;
+  padding: 38px 40px;
+}
+
+@media (max-width: 768px) {
+  .section-details {
+    padding: 25px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .section-details {
+    padding: 20px 16px;
+  }
+}
