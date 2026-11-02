@@ -1,10 +1,11 @@
+
 const argon2 = require("argon2");
-const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const RefreshToken = require("../models/RefreshToken");
 const generateTokens = require("../utils/generateTokens");
 const hashToken = require("../utils/hashTokens");
 
+// REGISTER
 const register = async (req, res, next) => {
     try {
         const {
@@ -54,9 +55,11 @@ const register = async (req, res, next) => {
         next(error);
     }
 };
-const login = async(req , res, next)=>{
 
-      try {
+
+// LOGIN
+const login = async (req, res, next) => {
+    try {
         const { email, password } = req.body;
 
         const user = await User
@@ -69,23 +72,27 @@ const login = async(req , res, next)=>{
                 message: "Invalid email or password"
             });
         }
-         if (!user.isActive) {
+
+        if (!user.isActive) {
             return res.status(403).json({
                 success: false,
                 message: "Account is inactive"
             });
         }
-         const passwordValid = await argon2.verify(
+
+        const passwordValid = await argon2.verify(
             user.password,
             password
         );
+
         if (!passwordValid) {
             return res.status(401).json({
                 success: false,
                 message: "Invalid email or password"
             });
         }
-         const { accessToken, refreshToken } =
+
+        const { accessToken, refreshToken } =
             await generateTokens(user);
 
         res.cookie("refreshToken", refreshToken, {
@@ -95,7 +102,8 @@ const login = async(req , res, next)=>{
             maxAge: 7 * 24 * 60 * 60 * 1000,
             path: "/api/auth"
         });
-return res.status(200).json({
+
+        return res.status(200).json({
             success: true,
             message: "Login successful",
             accessToken,
@@ -108,15 +116,17 @@ return res.status(200).json({
                 role: user.role
             }
         });
-         } catch (error) {
+
+    } catch (error) {
         next(error);
     }
-}
-//LOGOUT
+};
 
+
+// LOGOUT
 const logout = async (req, res, next) => {
     try {
-        const refreshToken = req.cookies.refreshToken;
+        const refreshToken = req.cookies?.refreshToken;
 
         if (refreshToken) {
             await RefreshToken.deleteOne({
@@ -135,18 +145,27 @@ const logout = async (req, res, next) => {
             success: true,
             message: "Logout successful"
         });
+
     } catch (error) {
         next(error);
     }
 };
 
 
+// REFRESH ACCESS TOKEN
 const refresh = async (req, res, next) => {
     let newRefreshToken;
 
     try {
-        // 1. Read the refresh token from the HTTP-only cookie
-        const refreshToken = req.cookies.refreshToken;
+        // DEBUG: Check whether cookies are reaching the backend
+        console.log("Refresh cookies:", req.cookies);
+        
+        const refreshToken = req.cookies?.refreshToken;
+
+        console.log(
+            "Refresh token received:",
+            !!refreshToken
+        );
 
         if (!refreshToken) {
             return res.status(401).json({
@@ -155,10 +174,10 @@ const refresh = async (req, res, next) => {
             });
         }
 
-        // 2. Hash the received token
+        // Hash the received refresh token
         const tokenHash = hashToken(refreshToken);
 
-        // 3. Find the stored token
+        // Find the token in database
         const storedToken = await RefreshToken.findOne({
             tokenHash
         });
@@ -170,7 +189,7 @@ const refresh = async (req, res, next) => {
             });
         }
 
-        // 4. Check expiry
+        // Check token expiry
         if (storedToken.expiresAt <= new Date()) {
             await RefreshToken.deleteOne({
                 _id: storedToken._id
@@ -182,7 +201,7 @@ const refresh = async (req, res, next) => {
             });
         }
 
-        // 5. Check the associated user
+        // Find associated user
         const user = await User.findById(storedToken.user);
 
         if (!user || !user.isActive) {
@@ -196,14 +215,13 @@ const refresh = async (req, res, next) => {
             });
         }
 
-        // 6. Generate a new token pair and save the new refresh token
+        // Generate a new token pair
         const tokens = await generateTokens(user);
 
         const accessToken = tokens.accessToken;
         newRefreshToken = tokens.refreshToken;
 
-        // 7. Atomically consume the old token.
-        // Only one competing request can successfully delete it.
+        // Consume the old refresh token
         const consumedToken = await RefreshToken.findOneAndDelete({
             _id: storedToken._id,
             tokenHash,
@@ -211,8 +229,6 @@ const refresh = async (req, res, next) => {
         });
 
         if (!consumedToken) {
-            // Another request may already have consumed the old token.
-            // Remove the new token created by this losing request.
             await RefreshToken.deleteOne({
                 tokenHash: hashToken(newRefreshToken)
             });
@@ -223,7 +239,7 @@ const refresh = async (req, res, next) => {
             });
         }
 
-        // 8. Send the new refresh token as an HTTP-only cookie
+        // Set the new refresh token cookie
         res.cookie("refreshToken", newRefreshToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
@@ -232,7 +248,6 @@ const refresh = async (req, res, next) => {
             path: "/api/auth"
         });
 
-        // 9. Return the new access token
         return res.status(200).json({
             success: true,
             message: "Token refreshed successfully",
@@ -240,8 +255,7 @@ const refresh = async (req, res, next) => {
         });
 
     } catch (error) {
-        // Clean up a newly created token if an error occurs
-        // before the response is successfully completed.
+        // Clean up newly generated token if an error occurs
         if (newRefreshToken) {
             try {
                 await RefreshToken.deleteOne({
