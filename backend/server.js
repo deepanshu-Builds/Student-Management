@@ -18,11 +18,13 @@ const app = express();
 app.use(helmet());
 
 app.use(cors({
-//   origin: [
-//     "http://localhost:5173",
-//     "https://student-management-wheat-seven.vercel.app"
-//   ],
-origin:"*",
+  origin: [
+    "http://localhost:5173",
+    "https://student-management-wheat-seven.vercel.app",
+            "https://student-management-8mmreircp-deepanshu1580-6375.vercel.app"
+
+  ],
+
   credentials: true
 }));
 
