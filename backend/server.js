@@ -18,8 +18,11 @@ const app = express();
 app.use(helmet());
 
 app.use(cors({
-    origin: "http://localhost:5173",
-    credentials: true
+  origin: [
+    "http://localhost:5173",
+    "https://student-management-wheat-seven.vercel.app"
+  ],
+  credentials: true
 }));
 
 app.use(express.json());
