@@ -14,6 +14,8 @@
   border-bottom: none;
   position: relative;
   z-index: 100;
+  font-family: "Libre Baskerville", serif;
+ 
   box-shadow: 0 1px 5px black;
 }
 
@@ -54,7 +56,7 @@
 .navbar-link {
   position: relative;
   padding: 9px 0;
-  color: #ffffff;
+  color: #fcfcfc;
   background: transparent;
   text-decoration: none;
   border: none;
@@ -62,6 +64,8 @@
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
+  
+ 
   transition: color 0.2s ease, opacity 0.2s ease;
 }
 
