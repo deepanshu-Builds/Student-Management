@@ -68,7 +68,7 @@ function LoginPage({ onNavigate, onLogin }) {
                 <div className="login-card">
 
                     <div className="login-heading">
-                        <h1>Sign in to your account</h1>
+                        <h1>Log in to your account</h1>
                     </div>
 
                     <form
@@ -123,7 +123,7 @@ function LoginPage({ onNavigate, onLogin }) {
                             className="login-submit"
                             disabled={loading}
                         >
-                            {loading ? "Signing In..." : "Sign In"}
+                            {loading ? "Signing In..." : "Log in"}
                         </button>
                     </form>
 
