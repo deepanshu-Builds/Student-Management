@@ -181,7 +181,12 @@ function StudentProgress({ section, student, onClose, accessToken }) {
             <p>Roll Number: {student.rollNumber}</p>
           </div>
 
-          <div className="overall-attendance-card">
+          <div 
+          className={
+            overallPercentage>=70
+          ? "overall-attendance-card"
+          :"overall-attendance-red"
+        }>
             <span>Overall Attendance</span>
             <strong>{overallPercentage}%</strong>
             <small>
