@@ -1,4 +1,3 @@
-
 import axios from "axios";
 
 const API_BASE_URL =
@@ -8,6 +7,9 @@ const API_BASE_URL =
 const api = axios.create({
     baseURL: API_BASE_URL,
     withCredentials: true,
+    // Render cold start me request bahut der latak sakti hai,
+    // timeout se error milta hai aur App.jsx ka retry chalu ho jata hai
+    timeout: 20000,
     headers: {
         "Content-Type": "application/json",
     },
@@ -76,8 +78,13 @@ api.interceptors.response.use(
             return api(originalRequest);
 
         } catch (refreshError) {
-            setAccessToken(null);
-            window.dispatchEvent(new Event("auth:session-expired"));
+            // Sirf tab logout karo jab server ne sach me 401 diya.
+            // Network error / 502 / timeout (cold start) pe session mat todo,
+            // cookie abhi bhi valid hai.
+            if (refreshError.response?.status === 401) {
+                setAccessToken(null);
+                window.dispatchEvent(new Event("auth:session-expired"));
+            }
 
             return Promise.reject(refreshError);
         }
@@ -108,12 +115,18 @@ export const apiRequest = async (
         return response.data;
 
     } catch (error) {
-        console.error(
-            "API Request Error:",
-            error.response?.data || error.message
-        );
+        const status = error.response?.status;
+        const data = error.response?.data;
+        const body = data && typeof data === "object" ? data : {};
 
-        throw error.response?.data || error;
+        console.error("API Request Error:", body.message || error.message);
+
+        // Pehle sirf response body throw hota tha, isliye status ka pata hi nahi chalta tha.
+        // Ab body ke fields (message, success, ...) bhi milte hain aur status bhi.
+        const apiError = new Error(body.message || error.message);
+        Object.assign(apiError, body, { status });
+
+        throw apiError;
     }
 };
 
