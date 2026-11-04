@@ -19,6 +19,7 @@ const PORT = process.env.PORT || 5000;
 // Allowed frontend origins
 const allowedOrigins = [
     "http://localhost:5173",
+    "https://student-management-hq1t.vercel.app",
     "https://student-management-wheat-seven.vercel.app",
     "https://student-management-8mmreircp-deepanshu1580-6375.vercel.app",
     "https://student-management-git-main-deepanshu1580-6375.vercel.app"
