@@ -59,7 +59,7 @@ function About() {
         </div>
 
         <div className="about-footer">
-          <span>★</span>
+          
           <div>
             <h3>Built for Better Education</h3>
             <p>Because every student's progress matters.</p>
