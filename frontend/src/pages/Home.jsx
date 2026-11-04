@@ -54,7 +54,7 @@ function Home({ sections, onCreateSection, onOpenSection }) {
             setShowForm(true);
           }}
         >
-          Create Section
+          + Create Section
         </button>
       </div>
 
