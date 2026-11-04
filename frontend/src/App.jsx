@@ -11,7 +11,7 @@ import Contact from "./pages/Contact";
 import Navbar from "./components/Navbar";
 import SectionDetails from "./components/SectionDetails";
 
-import { apiRequest } from "./services/api";
+import { apiRequest, setAccessToken } from "./services/api";
 import "./styles/global.css";
 
 function App() {
@@ -20,7 +20,7 @@ function App() {
   const [activeSectionId, setActiveSectionId] = useState(null);
 
   const [user, setUser] = useState(null);
-  const [accessToken, setAccessToken] = useState(null);
+  const [accessToken, setAccessTokenState] = useState(null);
   const [sections, setSections] = useState([]);
 
   const [loading, setLoading] = useState(true);
@@ -43,7 +43,12 @@ function App() {
 
         const token = response.accessToken;
 
+        if (!token) {
+          throw new Error("Access token not received.");
+        }
+
         setAccessToken(token);
+        setAccessTokenState(token);
 
         const userResponse = await apiRequest(
           "/auth/me",
@@ -53,16 +58,45 @@ function App() {
 
         setUser(userResponse.user);
         setCurrentRoute("dashboard");
+
       } catch (error) {
         setAccessToken(null);
+        setAccessTokenState(null);
         setUser(null);
         setCurrentRoute("landing");
+
       } finally {
         setLoading(false);
       }
     };
 
     restoreSession();
+  }, []);
+
+
+  // Handle expired refresh session
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      setAccessToken(null);
+      setAccessTokenState(null);
+      setUser(null);
+      setSections([]);
+      setActiveSectionId(null);
+      setActivePage("Home");
+      setCurrentRoute("landing");
+    };
+
+    window.addEventListener(
+      "auth:session-expired",
+      handleSessionExpired
+    );
+
+    return () => {
+      window.removeEventListener(
+        "auth:session-expired",
+        handleSessionExpired
+      );
+    };
   }, []);
 
   // Fetch all sections
@@ -85,8 +119,10 @@ function App() {
       }));
 
       setSections(formattedSections);
+
     } catch (error) {
       setSectionError(error.message || "Failed to load sections.");
+
     } finally {
       setLoadingSections(false);
     }
@@ -102,6 +138,8 @@ function App() {
   // Login handler
   const handleLogin = (response) => {
     setAccessToken(response.accessToken);
+    setAccessTokenState(response.accessToken);
+
     setUser(response.user);
     setActivePage("Home");
     setActiveSectionId(null);
@@ -122,15 +160,17 @@ function App() {
     try {
       await apiRequest(
         "/auth/logout",
-        {
-          method: "POST",
-        },
+        { method: "POST" },
         accessToken
       );
+
     } catch (error) {
       console.error("Logout error:", error.message);
+
     } finally {
       setAccessToken(null);
+      setAccessTokenState(null);
+
       setUser(null);
       setSections([]);
       setActiveSectionId(null);
@@ -145,7 +185,7 @@ function App() {
       "/sections",
       {
         method: "POST",
-        body: JSON.stringify(sectionData),
+        data: sectionData,
       },
       accessToken
     );
@@ -180,17 +220,14 @@ function App() {
   const renderDashboard = () => {
     const page = String(activePage || "Home").trim().toLowerCase();
 
-    // About page
     if (page === "about") {
       return <About />;
     }
 
-    // Contact page
     if (page === "contact") {
       return <Contact />;
     }
 
-    // Active section
     if (activeSectionId) {
       if (loadingSections) {
         return <p>Loading section...</p>;
@@ -210,12 +247,10 @@ function App() {
       );
     }
 
-    // Loading sections
     if (loadingSections) {
       return <p>Loading sections...</p>;
     }
 
-    // Home dashboard
     return (
       <>
         {sectionError && (
@@ -251,7 +286,7 @@ function App() {
     return (
       <LoginPage
         onLogin={handleLogin}
-        onSignup={handleSignupNavigation}
+        onNavigate={setCurrentRoute}
       />
     );
   }
@@ -259,9 +294,7 @@ function App() {
   // Signup page
   if (currentRoute === "signup") {
     return (
-      <SignupPage
-        onLogin={handleLoginNavigation}
-      />
+      <SignupPage onLogin={handleLoginNavigation} />
     );
   }
 
