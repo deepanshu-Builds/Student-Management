@@ -21,27 +21,37 @@
   color: #142f49;
   font-family: "Libre Baskerville", serif;
   font-size: 21px;
+  text-decoration: underline;
 }
 
 .progress-student-info p {
   margin: 0;
-  color: #626b75;
+  
   font-size: 14px;
+ color: #2f1be7;
+ font-family: "Libre Baskerville", serif;
+
 }
 
 .overall-attendance-card {
   min-width: 190px;
   padding: 15px;
   text-align: center;
-  background: #eaf0fb;
-  border: 1px solid #d6e1f5;
+  background: #6de4a2;
+
   border-radius: 8px;
+  box-shadow: 2px 2px 2px black;
+}
+.overall-attendance-card strong{
+  font-family: "Libre Baskerville", serif;
+  color: #0d0e0d;
 }
 
 .overall-attendance-card span,
 .overall-attendance-card small {
   display: block;
-  color: #34445b;
+  color: #0d0e0d;
+  font-family: "Libre Baskerville", serif;
 }
 
 .overall-attendance-card strong {
@@ -49,12 +59,40 @@
   margin: 7px 0;
   color: #142f49;
   font-size: 29px;
+  font-weight: bold;
+
 }
 
 .overall-attendance-card small {
   font-size: 11px;
 }
-
+.overall-attendance-red{
+   min-width: 190px;
+  padding: 15px;
+  text-align: center;
+  background: #e0432f;
+border: none;
+  border-radius: 8px;
+  box-shadow: 2px 2px 2px black;
+}
+.overall-attendance-red span,
+.overall-attendance-red small {
+  display: block;
+  color: #0d0e0d;
+  font-family: "Libre Baskerville", serif;
+}
+.overall-attendance-red small {
+  font-size: 13px;
+  color: #030303;
+  font-weight: bold;
+}
+.overall-attendance-red strong {
+  display: block;
+  margin: 7px 0;
+  color: #142f49;
+  font-size: 29px;
+  font-family: "Libre Baskerville", serif;
+}
 .progress-summary {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -72,6 +110,7 @@
 .progress-summary span,
 .progress-summary strong {
   display: block;
+  font-family: "Libre Baskerville", serif;
 }
 
 .progress-summary span {
@@ -153,11 +192,13 @@
 .recent-attendance-item strong {
   color: #142f49;
   font-size: 14px;
+  font-family: "Libre Baskerville", serif;
 }
 
 .recent-attendance-item > div span {
   color: #747c85;
   font-size: 12px;
+  font-family: "Libre Baskerville", serif;
 }
 
 .recent-attendance-item > span {
