@@ -73,7 +73,7 @@ function StudentForm({ student, onSave, onClose }) {
             <input
               id="student-name"
               type="text"
-              placeholder="Enter student name"
+              placeholder="Enter Student Name"
               value={name}
               onChange={(event) => {
                 setName(event.target.value);
@@ -90,7 +90,7 @@ function StudentForm({ student, onSave, onClose }) {
             <input
               id="roll-number"
               type="text"
-              placeholder="Enter roll number"
+              placeholder="Enter Roll Number"
               value={rollNumber}
               onChange={(event) => {
                 setRollNumber(event.target.value);
