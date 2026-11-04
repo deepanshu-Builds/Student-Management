@@ -1,23 +1,62 @@
-
 const argon2 = require("argon2");
 const User = require("../models/User");
 const RefreshToken = require("../models/RefreshToken");
 const generateTokens = require("../utils/generateTokens");
 const hashToken = require("../utils/hashTokens");
 
+const isProd = process.env.NODE_ENV === "production";
+
+// cookie options ek hi jagah rakhe hain taaki login / refresh / logout
+// teeno me same rahein (mismatch hone se hi logout wala bug aaya tha)
+const cookieBase = {
+    httpOnly: true,
+    secure: isProd,
+    // prod me frontend (vercel) aur backend (render) alag site hain -> "none" chahiye
+    // local me dono localhost hain, wahan "lax" chalta hai
+    sameSite: isProd ? "none" : "lax",
+    path: "/api/auth"
+};
+
+const refreshCookieOptions = {
+    ...cookieBase,
+    maxAge: 7 * 24 * 60 * 60 * 1000
+};
+
+const isNonEmptyString = (value) =>
+    typeof value === "string" && value.trim().length > 0;
+
+
 // REGISTER
 const register = async (req, res, next) => {
     try {
-        const {
-            name,
-            email,
-            password,
-            employeeId,
-            department
-        } = req.body;
+        const { name, email, password, employeeId, department } = req.body;
+
+        // typeof check zaroori hai, warna koi { "$ne": null } bhej ke query bigad sakta hai
+        if (
+            !isNonEmptyString(name) ||
+            !isNonEmptyString(email) ||
+            !isNonEmptyString(password) ||
+            !isNonEmptyString(employeeId) ||
+            !isNonEmptyString(department)
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "All fields are required"
+            });
+        }
+
+        if (password.length < 8) {
+            return res.status(400).json({
+                success: false,
+                message: "Password must be at least 8 characters"
+            });
+        }
+
+        const cleanEmail = email.trim().toLowerCase();
+        const cleanEmployeeId = employeeId.trim();
 
         const existingUser = await User.findOne({
-            $or: [{ email }, { employeeId }]
+            $or: [{ email: cleanEmail }, { employeeId: cleanEmployeeId }]
         });
 
         if (existingUser) {
@@ -30,11 +69,11 @@ const register = async (req, res, next) => {
         const hashedPassword = await argon2.hash(password);
 
         const user = await User.create({
-            name,
-            email,
+            name: name.trim(),
+            email: cleanEmail,
             password: hashedPassword,
-            employeeId,
-            department,
+            employeeId: cleanEmployeeId,
+            department: department.trim(),
             role: "teacher"
         });
 
@@ -52,6 +91,14 @@ const register = async (req, res, next) => {
         });
 
     } catch (error) {
+        // do log ek saath register karein to findOne dono ko miss kar deta hai,
+        // tab unique index error deta hai (code 11000)
+        if (error.code === 11000) {
+            return res.status(409).json({
+                success: false,
+                message: "Email or employee ID already registered"
+            });
+        }
         next(error);
     }
 };
@@ -62,8 +109,15 @@ const login = async (req, res, next) => {
     try {
         const { email, password } = req.body;
 
+        if (!isNonEmptyString(email) || !isNonEmptyString(password)) {
+            return res.status(400).json({
+                success: false,
+                message: "Email and password are required"
+            });
+        }
+
         const user = await User
-            .findOne({ email })
+            .findOne({ email: email.trim().toLowerCase() })
             .select("+password");
 
         if (!user) {
@@ -73,17 +127,7 @@ const login = async (req, res, next) => {
             });
         }
 
-        if (!user.isActive) {
-            return res.status(403).json({
-                success: false,
-                message: "Account is inactive"
-            });
-        }
-
-        const passwordValid = await argon2.verify(
-            user.password,
-            password
-        );
+        const passwordValid = await argon2.verify(user.password, password);
 
         if (!passwordValid) {
             return res.status(401).json({
@@ -92,16 +136,18 @@ const login = async (req, res, next) => {
             });
         }
 
-        const { accessToken, refreshToken } =
-            await generateTokens(user);
+        // isActive check password ke baad, warna bina password jaane
+        // koi bhi pata laga sakta hai ki kaun sa account inactive hai
+        if (!user.isActive) {
+            return res.status(403).json({
+                success: false,
+                message: "Account is inactive"
+            });
+        }
 
-        res.cookie("refreshToken", refreshToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "none",
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-            path: "/api/auth"
-        });
+        const { accessToken, refreshToken } = await generateTokens(user);
+
+        res.cookie("refreshToken", refreshToken, refreshCookieOptions);
 
         return res.status(200).json({
             success: true,
@@ -134,12 +180,8 @@ const logout = async (req, res, next) => {
             });
         }
 
-        res.clearCookie("refreshToken", {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "none",
-            path: "/api/auth"
-        });
+        // clearCookie me maxAge nahi dete, baaki options same hone chahiye
+        res.clearCookie("refreshToken", cookieBase);
 
         return res.status(200).json({
             success: true,
@@ -154,17 +196,8 @@ const logout = async (req, res, next) => {
 
 // REFRESH ACCESS TOKEN
 const refresh = async (req, res, next) => {
-    let newRefreshToken;
-
     try {
-       
-        
         const refreshToken = req.cookies?.refreshToken;
-
-        console.log(
-            "Refresh token received:",
-            !!refreshToken
-        );
 
         if (!refreshToken) {
             return res.status(401).json({
@@ -173,40 +206,33 @@ const refresh = async (req, res, next) => {
             });
         }
 
-        // Hash the received refresh token
-        const tokenHash = hashToken(refreshToken);
-
-        // Find the token in database
-        const storedToken = await RefreshToken.findOne({
-            tokenHash
+        // Pehle purana token atomically delete karte hain (find + delete ek hi step me).
+        // Isse agar 2 requests ek saath aayein to sirf ek jeetegi, aur
+        // naya token bana ke baad me cleanup karne ki zaroorat nahi padti.
+        const storedToken = await RefreshToken.findOneAndDelete({
+            tokenHash: hashToken(refreshToken)
         });
 
+        // yahan cookie clear nahi kar rahe: agar ye parallel request ki haar hai,
+        // to jeetne wali request ki nayi cookie yahan se mit sakti hai
         if (!storedToken) {
             return res.status(401).json({
                 success: false,
-                message: "Invalid refresh token"
+                message: "Invalid or already used refresh token"
             });
         }
 
-        // Check token expiry
         if (storedToken.expiresAt <= new Date()) {
-            await RefreshToken.deleteOne({
-                _id: storedToken._id
-            });
-
             return res.status(401).json({
                 success: false,
                 message: "Refresh token expired"
             });
         }
 
-        // Find associated user
         const user = await User.findById(storedToken.user);
 
         if (!user || !user.isActive) {
-            await RefreshToken.deleteOne({
-                _id: storedToken._id
-            });
+            res.clearCookie("refreshToken", cookieBase);
 
             return res.status(401).json({
                 success: false,
@@ -214,60 +240,17 @@ const refresh = async (req, res, next) => {
             });
         }
 
-        // Generate a new token pair
         const tokens = await generateTokens(user);
 
-        const accessToken = tokens.accessToken;
-        newRefreshToken = tokens.refreshToken;
-
-        // Consume the old refresh token
-        const consumedToken = await RefreshToken.findOneAndDelete({
-            _id: storedToken._id,
-            tokenHash,
-            expiresAt: { $gt: new Date() }
-        });
-
-        if (!consumedToken) {
-            await RefreshToken.deleteOne({
-                tokenHash: hashToken(newRefreshToken)
-            });
-
-            return res.status(401).json({
-                success: false,
-                message: "Refresh token has already been used or expired"
-            });
-        }
-
-        // Set the new refresh token cookie
-        res.cookie("refreshToken", newRefreshToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "none",
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-            path: "/api/auth"
-        });
+        res.cookie("refreshToken", tokens.refreshToken, refreshCookieOptions);
 
         return res.status(200).json({
             success: true,
             message: "Token refreshed successfully",
-            accessToken
+            accessToken: tokens.accessToken
         });
 
     } catch (error) {
-        // Clean up newly generated token if an error occurs
-        if (newRefreshToken) {
-            try {
-                await RefreshToken.deleteOne({
-                    tokenHash: hashToken(newRefreshToken)
-                });
-            } catch (cleanupError) {
-                console.error(
-                    "Refresh token cleanup failed:",
-                    cleanupError.message
-                );
-            }
-        }
-
         return next(error);
     }
 };
