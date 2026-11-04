@@ -157,8 +157,7 @@ const refresh = async (req, res, next) => {
     let newRefreshToken;
 
     try {
-        // DEBUG: Check whether cookies are reaching the backend
-        console.log("Refresh cookies:", req.cookies);
+       
         
         const refreshToken = req.cookies?.refreshToken;
 
