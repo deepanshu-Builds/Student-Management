@@ -181,9 +181,7 @@ function SignupPage({ onNavigate }) {
           </div>
         </div>
 
-        <p className="signup-bottom-text">
-          A smarter way to manage your academics.
-        </p>
+      
       </section>
     </main>
   );
