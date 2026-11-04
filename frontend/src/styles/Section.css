@@ -3,8 +3,10 @@
 .back-button {
   margin-bottom: 25px;
   padding: 8px 0;
-  color: #244d70;
+  color: #0b1b61;
   background: transparent;
+    font-family: "Libre Baskerville" , sans-serif;
+  
   border: none;
   font-size: 13px;
   font-weight: 600;
@@ -20,6 +22,19 @@
   justify-content: space-between;
   gap: 20px;
   margin-bottom: 27px;
+}
+.details-header-actions button{
+  color: white;
+  font-family: "Libre Baskerville" , sans-serif;
+  background-color: #1d127e;
+  box-shadow: 2px 3px 2px black;
+  border: none;
+ 
+
+
+}
+.details-header-actions button:hover{
+background-color: #211686;
 }
 
 .details-header h1 {
@@ -91,7 +106,7 @@
 }
 
 .details-section-heading > span {
-  color: #244d70;
+  color: #295881;
   font-size: 12px;
   font-weight: 600;
 }
@@ -107,9 +122,11 @@
   align-items: center;
   gap: 9px;
   padding: 12px 16px;
-  color: #294a65;
-  background: #ffffff;
+  color: #fcfcfc;
+  background: #1d127e;
   border: 1px solid #e5e2da;
+   font-family: "Libre Baskerville" , sans-serif;
+
   border-radius: 6px;
   box-shadow: 0 2px 6px rgba(32, 39, 46, 0.03);
   font-size: 13px;
@@ -119,7 +136,7 @@
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #244d70;
+  background: #357c14;
 }
 
 .student-empty-state {
@@ -379,10 +396,12 @@
   width: 100%;
   min-height: 43px;
   padding: 10px 12px;
-  color: #8b9197;
+  color: #000000;
   background: #ffffff;
-  border: 1px solid #dcdedc;
+  border: 1px solid  rgb(145, 135, 135);
   border-radius: 5px;
+  font-family: "Libre Baskerville" , sans-serif;
+
   outline: none;
   font-size: 13px;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -463,17 +482,20 @@
 
 .form-error {
   margin: 10px 0;
-  color: #b42318;
+  color: #991006;
   font-size: 12px;
   line-height: 1.5;
+  font-family: "Libre Baskerville" , sans-serif;
 }
 
 .modal-actions {
   display: flex;
   justify-content: flex-end;
+  
   gap: 10px;
   margin-top: 25px;
   padding-top: 18px;
+  font-family: "Libre Baskerville" , sans-serif;
   border-top: 1px solid #eeece6;
 }
 
@@ -484,6 +506,7 @@
   border-radius: 5px;
   font-size: 13px;
   font-weight: 600;
+  
   transition: 0.2s ease;
 }
 
@@ -495,13 +518,13 @@
 }
 
 .primary-btn:hover {
-  background: #193d5d;
+  background: #1c1372;
   border-color: #193d5d;
   transform: translateY(-1px);
 }
 
 .secondary-btn {
-  color: #52616e;
+  color: #070707;
   background: #ffffff;
   border: 1px solid #dcdedc;
 }
@@ -533,7 +556,7 @@
   padding: 8px 12px;
   border: 1px solid #142f49;
   border-radius: 5px;
-  background: #142f49;
+  background:#1d127e;
   color: #ffffff;
   font-size: 12px;
   cursor: pointer;
@@ -541,7 +564,7 @@
 }
 
 .view-progress-btn:hover {
-  background: #234d70;
+  background: #180761;
 }
 /* Section Details Page Layout */
 .section-details-page {
@@ -563,4 +586,11 @@
   .section-details-page {
     padding: 20px 16px;
   }
+}
+.modal-header button{
+  text-align: center;
+  padding-bottom: 4px;
+  color: white;
+  
+  background-color: #13116b;
 }
