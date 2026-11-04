@@ -373,7 +373,7 @@ function Attendance({ section, onBack, accessToken }) {
         {students.length === 0 ? (
           <div className="attendance-empty-state">
             <h3>No students available</h3>
-            <p>Add students to this section before taking attendance.</p>
+           
           </div>
         ) : (
           <>
@@ -505,7 +505,7 @@ function Attendance({ section, onBack, accessToken }) {
           </div>
 
           <span className="attendance-count">
-            {attendanceHistory.length} records
+            {attendanceHistory.length} Records
           </span>
         </div>
 
