@@ -282,6 +282,7 @@ function SectionDetails({
         </div>
 
         <div className="details-header-actions">
+          <div className="manage-attendance"></div>
           <button
             className="attendance-open-btn"
             onClick={() => setShowAttendance(true)}
