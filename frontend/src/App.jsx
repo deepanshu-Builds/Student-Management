@@ -1,5 +1,4 @@
-
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
@@ -14,6 +13,17 @@ import SectionDetails from "./components/SectionDetails";
 import { apiRequest, setAccessToken } from "./services/api";
 import "./styles/global.css";
 
+// Render free tier so jata hai, pehli request pe 30-60 sec lag sakte hain.
+// Isliye session restore me network/5xx error pe thoda retry karte hain.
+const RESTORE_MAX_TRIES = 4;
+const RESTORE_RETRY_DELAY = 5000;
+
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// NOTE: apiRequest error ka status kaise deta hai uske hisab se ye adjust karna
+const isUnauthorized = (error) =>
+  error?.status === 401 || error?.response?.status === 401;
+
 function App() {
   const [currentRoute, setCurrentRoute] = useState("landing");
   const [activePage, setActivePage] = useState("Home");
@@ -24,115 +34,128 @@ function App() {
   const [sections, setSections] = useState([]);
 
   const [loading, setLoading] = useState(true);
+  const [serverWaking, setServerWaking] = useState(false);
   const [loadingSections, setLoadingSections] = useState(false);
   const [sectionError, setSectionError] = useState("");
 
   const restoreStarted = useRef(false);
 
+  // Logout, session expire, restore fail - teeno jagah yahi reset chahiye,
+  // pehle ye code 3 jagah copy tha
+  const resetSession = useCallback(() => {
+    setAccessToken(null);
+    setAccessTokenState(null);
+    setUser(null);
+    setSections([]);
+    setActiveSectionId(null);
+    setActivePage("Home");
+    setCurrentRoute("landing");
+  }, []);
+
   // Restore existing login session
   useEffect(() => {
     if (restoreStarted.current) return;
-
     restoreStarted.current = true;
 
-    const restoreSession = async () => {
-      try {
-        const response = await apiRequest("/auth/refresh", {
-          method: "POST",
-        });
+    const tryRestore = async () => {
+      const response = await apiRequest("/auth/refresh", { method: "POST" });
+      const token = response.accessToken;
 
-        const token = response.accessToken;
-
-        if (!token) {
-          throw new Error("Access token not received.");
-        }
-
-        setAccessToken(token);
-        setAccessTokenState(token);
-
-        const userResponse = await apiRequest(
-          "/auth/me",
-          { method: "GET" },
-          token
-        );
-
-        setUser(userResponse.user);
-        setCurrentRoute("dashboard");
-
-      } catch (error) {
-        setAccessToken(null);
-        setAccessTokenState(null);
-        setUser(null);
-        setCurrentRoute("landing");
-
-      } finally {
-        setLoading(false);
+      if (!token) {
+        throw new Error("Access token not received.");
       }
-    };
 
-    restoreSession();
-  }, []);
+      setAccessToken(token);
+      setAccessTokenState(token);
 
-
-  // Handle expired refresh session
-  useEffect(() => {
-    const handleSessionExpired = () => {
-      setAccessToken(null);
-      setAccessTokenState(null);
-      setUser(null);
-      setSections([]);
-      setActiveSectionId(null);
-      setActivePage("Home");
-      setCurrentRoute("landing");
-    };
-
-    window.addEventListener(
-      "auth:session-expired",
-      handleSessionExpired
-    );
-
-    return () => {
-      window.removeEventListener(
-        "auth:session-expired",
-        handleSessionExpired
-      );
-    };
-  }, []);
-
-  // Fetch all sections
-  const fetchSections = async (token = accessToken) => {
-    if (!token) return;
-
-    try {
-      setLoadingSections(true);
-      setSectionError("");
-
-      const response = await apiRequest(
-        "/sections",
+      const userResponse = await apiRequest(
+        "/auth/me",
         { method: "GET" },
         token
       );
 
-      const formattedSections = (response.sections || []).map((section) => ({
-        ...section,
-        id: section._id,
-      }));
+      setUser(userResponse.user);
+      setCurrentRoute("dashboard");
+    };
 
-      setSections(formattedSections);
+    const restoreSession = async () => {
+      for (let attempt = 1; attempt <= RESTORE_MAX_TRIES; attempt++) {
+        try {
+          await tryRestore();
+          break;
+        } catch (error) {
+          const lastTry = attempt === RESTORE_MAX_TRIES;
 
-    } catch (error) {
-      setSectionError(error.message || "Failed to load sections.");
+          // 401 = cookie nahi hai / token invalid -> sach me logout hai, retry ka fayda nahi
+          // baaki errors (network, 502, timeout) = server shayad abhi jaag raha hai
+          if (isUnauthorized(error) || lastTry) {
+            resetSession();
+            break;
+          }
 
-    } finally {
-      setLoadingSections(false);
-    }
-  };
+          setServerWaking(true);
+          await wait(RESTORE_RETRY_DELAY);
+        }
+      }
+
+      setServerWaking(false);
+      setLoading(false);
+    };
+
+    restoreSession();
+  }, [resetSession]);
+
+  // Handle expired refresh session
+  useEffect(() => {
+    window.addEventListener("auth:session-expired", resetSession);
+
+    return () => {
+      window.removeEventListener("auth:session-expired", resetSession);
+    };
+  }, [resetSession]);
 
   // Fetch sections after login or session restoration
   useEffect(() => {
-    if (currentRoute === "dashboard" && accessToken) {
-      fetchSections(accessToken);
-    }
+    if (currentRoute !== "dashboard" || !accessToken) return;
+
+    // agar beech me logout ho gaya to purani request ka result state me na jaye
+    let cancelled = false;
+
+    const fetchSections = async () => {
+      try {
+        setLoadingSections(true);
+        setSectionError("");
+
+        const response = await apiRequest(
+          "/sections",
+          { method: "GET" },
+          accessToken
+        );
+
+        if (cancelled) return;
+
+        const formattedSections = (response.sections || []).map((section) => ({
+          ...section,
+          id: section._id,
+        }));
+
+        setSections(formattedSections);
+      } catch (error) {
+        if (!cancelled) {
+          setSectionError(error.message || "Failed to load sections.");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingSections(false);
+        }
+      }
+    };
+
+    fetchSections();
+
+    return () => {
+      cancelled = true;
+    };
   }, [currentRoute, accessToken]);
 
   // Login handler
@@ -147,35 +170,18 @@ function App() {
   };
 
   // Navigation handlers
-  const handleLoginNavigation = () => {
-    setCurrentRoute("login");
-  };
-
-  const handleSignupNavigation = () => {
-    setCurrentRoute("signup");
-  };
+  const handleLoginNavigation = () => setCurrentRoute("login");
+  const handleSignupNavigation = () => setCurrentRoute("signup");
 
   // Logout handler
   const handleLogout = async () => {
     try {
-      await apiRequest(
-        "/auth/logout",
-        { method: "POST" },
-        accessToken
-      );
-
+      await apiRequest("/auth/logout", { method: "POST" }, accessToken);
     } catch (error) {
+      // server pe fail bhi ho jaye to bhi local session clear karna hai
       console.error("Logout error:", error.message);
-
     } finally {
-      setAccessToken(null);
-      setAccessTokenState(null);
-
-      setUser(null);
-      setSections([]);
-      setActiveSectionId(null);
-      setActivePage("Home");
-      setCurrentRoute("landing");
+      resetSession();
     }
   };
 
@@ -253,9 +259,7 @@ function App() {
 
     return (
       <>
-        {sectionError && (
-          <p className="error-message">{sectionError}</p>
-        )}
+        {sectionError && <p className="error-message">{sectionError}</p>}
 
         <Home
           sections={sections}
@@ -268,7 +272,13 @@ function App() {
 
   // Initial loading
   if (loading) {
-    return <p>Loading application...</p>;
+    return (
+      <p>
+        {serverWaking
+          ? "Server start ho raha hai, thoda wait karo (30-60 sec lag sakte hain)..."
+          : "Loading application..."}
+      </p>
+    );
   }
 
   // Landing page
@@ -283,19 +293,12 @@ function App() {
 
   // Login page
   if (currentRoute === "login") {
-    return (
-      <LoginPage
-        onLogin={handleLogin}
-        onNavigate={setCurrentRoute}
-      />
-    );
+    return <LoginPage onLogin={handleLogin} onNavigate={setCurrentRoute} />;
   }
 
   // Signup page
   if (currentRoute === "signup") {
-    return (
-      <SignupPage onLogin={handleLoginNavigation} />
-    );
+    return <SignupPage onLogin={handleLoginNavigation} />;
   }
 
   // Main dashboard
