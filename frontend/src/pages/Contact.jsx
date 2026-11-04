@@ -31,7 +31,7 @@ function Contact() {
   return (
     <main className="info-page">
       <section className="info-hero">
-        <span className="info-eyebrow">WE'D LOVE TO HEAR FROM YOU</span>
+        {/* <span className="info-eyebrow">WE'D LOVE TO HEAR FROM YOU</span> */}
         <h1>Contact Us</h1>
         <p>We're here to help and answer your queries</p>
         <span className="hero-line" />
