@@ -26,7 +26,8 @@
   font-size: 13px;
 }
 .attendance-header span{
-    color: #0ea12e;
+    color: #10aa31;
+    font-family: "Libre Baskerville" , sans-serif;
 }
 .attendance-section{
     display: flex;
@@ -51,6 +52,13 @@
 .attendance-roster-header h2 {
   color: #1d127e;
   font-size: 15px;
+  font-family: "Libre Baskerville" , sans-serif;
+}
+.attendance-filter-heading p{
+  font-family: "Libre Baskerville" , sans-serif;
+  color: #000000;
+}
+.attendance-roster-header span{
   font-family: "Libre Baskerville" , sans-serif;
 }
 
@@ -126,6 +134,7 @@
 .attendance-summary strong {
   color: #020202;
   font-size: 23px;
+  font-family: "Libre Baskerville" , sans-serif;
 }
 
 .attendance-bulk-actions {
@@ -253,8 +262,9 @@
 
 .attendance-empty-state p {
   margin-top: 7px;
-  color: #e70303;
+  color: #d80e0e;
   font-size: 12px;
+  font-family: "Libre Baskerville" , sans-serif;
 }
 
 .attendance-history-list {
@@ -290,10 +300,18 @@
 }
 
 .attendance-history-item strong {
-  color: #303a43;
+  color: #151616;
   font-size: 13px;
+  font-family: "Libre Baskerville" , sans-serif;
 }
-
+.attendance-history-item button{
+  font-family: "Libre Baskerville" , sans-serif;
+  color: #1ba839;
+}
+.attendance-history-item span{
+  font-family: "Libre Baskerville" , sans-serif;
+  color: black;
+}
 .attendance-history-item > div:first-child span {
   color: #727b83;
   font-size: 11px;
@@ -468,6 +486,7 @@ color: #edf0ee;
   font-family: "Libre Baskerville" , sans-serif;
   
 }
+
 .student-table-wrapper td{
    font-family: "Libre Baskerville" , sans-serif;
   
