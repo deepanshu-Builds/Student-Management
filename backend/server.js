@@ -8,6 +8,9 @@ const helmet = require("helmet");
 
 const connectDB = require("./config/database");
 const authRoutes = require("./routes/authRoutes");
+const sectionRoutes = require("./routes/sectionRoutes");
+const studentRoutes = require("./routes/studentRoutes");
+const attendanceRoutes = require("./routes/attendanceRoutes");
 
 const app = express();
 
@@ -66,6 +69,9 @@ app.get("/", (req, res) => {
 
 // Authentication routes
 app.use("/api/auth", authRoutes);
+app.use("/api/sections", sectionRoutes);
+app.use("/api/students", studentRoutes);
+app.use("/api/attendance", attendanceRoutes);
 
 // Global error handler
 app.use((err, req, res, next) => {
